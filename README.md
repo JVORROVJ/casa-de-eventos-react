@@ -1,77 +1,170 @@
-# Sistema de casa de eventos turma 1025
+# Projeto Final - Sistema de Casa de Eventos com Docker
 
-![Print da Homepage](https://i.ibb.co/0BLwdMW/Screenshot-2024-02-19-at-16-30-28.png)
+Este repositório contém o projeto "Sistema de Casa de Eventos", que foi conteinerizado usando Docker e Docker Compose para facilitar sua implantação e escalabilidade.
 
 ## Tecnologias Utilizadas
 
-- React
-- Vite
-- Node v20.5.1
+- **Frontend**: React, Vite
+- **Backend**: Node.js
+- **Dependências**:
+  - React Router
+  - Styled Components
+  - Axios
+  - React Toastify
+  - Json Server
 
-## Dependências Utilizadas
+## Participantes do Projeto
 
-- React Router
-- Styled Components
-- Axios
-- React Toastify
-- Json Server
-
-## Participantes do projeto
-
-- Aluno 01
-- Aluno 02
-- Aluno 03
-
-## Responsaveis pelo desenvolvimento:
-
-### Aluno 01
-
-- Criou o componente de rotas
-- Foi responsável pelo CSS
-
-### Aluno 02
-
-- Criou a página de login
-- Criou o Componente de cabeçalho
+- **Aluno 01**: Criou o componente de rotas e foi responsável pelo CSS.
+- **Aluno 02**: Criou a página de login e o componente de cabeçalho.
 
 ## Instruções de Instalação
 
-Clonar o projeto com o comando abaixo:
+Para instalar o projeto localmente, siga os passos abaixo:
 
-```sh
-git clone https://github.com/roofranklin/casa-de-eventos-react.git
-```
+1. **Instale as dependências**:
 
-Entrar na pasta do projeto
+    npm install
 
-```sh
-cd casa-de-eventos-react
-```
 
-Instalar as dependencias
+## Executar Docker a partir do Repositório
 
-```sh
-npm install
-```
+Para executar o contêiner da aplicação diretamente do repositório, siga as instruções abaixo:
 
-Instalar de maneira global o json-server (Caso você ainda não possua)
+2. **Baixe e execute o contêiner**:
 
-```sh
-npm install -g json-server
-```
+    docker run -d -p 8080:5173 -p 3000:3000 viniciuscaol/projetofinalscdocker
 
-## Instruções para rodar o projeto
 
-Digitar o comando abaixo para rodar em desenvolvimento
+<br>
 
-```sh
-npm run dev
-```
+3. **Acesse a aplicação**:
 
-Digitar o comando abaixo para rodar o mock local
+    - Frontend: http://localhost:8080
+    - Backend: http://localhost:3000
 
-```sh
-json-server --watch eventos.json
-```
+Certifique-se de que o Docker esteja instalado e em execução no seu sistema antes de executar o comando.
 
-### _Pronto! Seu projeto já estará rodando no endereço http://localhost:5173_
+## Docker
+#### Dockerfile
+
+O `Dockerfile` neste repositório foi criado para facilitar a conteinerização da aplicação.
+
+**Como funciona**:
+
+- O contêiner é baseado na imagem do Node.js.
+- As dependências são instaladas e a aplicação é iniciada, incluindo o json-server.
+
+#### Instruções para construir e rodar a aplicação com Docker
+1. **Estrutura do** `Dockerfile`
+
+    FROM node:20.5.1
+    WORKDIR /usr/src/app
+    COPY package*.json ./
+    RUN npm install
+    RUN npm install -g json-server
+    COPY . .
+    EXPOSE 5173
+    EXPOSE 3000
+    CMD ["sh", "-c", "npm run dev -- --host & json-server --watch eventos.json"]
+
+
+<br>
+
+2. **Construa a imagem Docker**:
+
+    docker build -t projeto-final .
+
+
+<br>
+
+3. **Execute o contêiner**:
+
+    docker run -p 5173:5173 -p 3000:3000 projeto-final
+
+
+<br>
+
+4. **Acesse a aplicação**:
+
+    - Frontend: http://localhost:5173
+    - Mock Server: http://localhost:3000
+
+<br>
+
+## Docker Compose
+#### Instruções para usar Docker Compose
+
+1. **Estrutura do** `docker-compose.yaml`
+
+    version: '3.8'
+    services:
+        frontend:
+            build:
+            context: .
+            dockerfile: Dockerfile-front
+            ports:
+            - "8080:80"
+            volumes:
+            - .:/app
+
+        backend:
+            build:
+            context: .
+            dockerfile: Dockerfile-back
+            volumes:
+            - ./eventos.json:/data/eventos.json
+            ports:
+            - "3000:3000"
+
+<br>
+
+- **Estrutura do** `Dockerfile-front`:
+
+    FROM node:20.5.1 AS build
+    WORKDIR /app
+    COPY package*.json ./
+    RUN npm install
+    COPY . .
+    RUN npm run build
+    FROM nginx:alpine
+    COPY --from=build /app/dist /usr/share/nginx/html
+    EXPOSE 80
+    CMD ["nginx", "-g", "daemon off;"]
+
+
+<br>
+
+- **Estrutura do** `Dockerfile-back`:
+
+    FROM node:20.5.1
+    WORKDIR /app
+    COPY package*.json ./
+    RUN npm install json-server --save-dev
+    COPY eventos.json ./
+    EXPOSE 3000
+    CMD ["npx", "json-server", "--watch", "eventos.json", "--host", "0.0.0.0"]
+
+
+<br>
+
+2. **Inicie os serviços**:
+
+    docker compose up -d
+
+<br>
+
+3. **Acesse a aplicação**:
+
+    - Frontend: http://localhost:8080
+    - Backend: http://localhost:3000
+
+<br>
+
+4. **Parar os serviçoes**:
+
+    docker compose down
+  
+<br>
+
+[Readme Original](https://github.com/roofranklin/casa-de-eventos-react/blob/main/README.md)
